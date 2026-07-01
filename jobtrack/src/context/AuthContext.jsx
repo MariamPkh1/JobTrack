@@ -37,6 +37,13 @@ export function AuthProvider({ children }) {
         options: { data: { name } },
       }),
     signOut: () => supabase.auth.signOut(),
+    // Sends a recovery email; the link lands the user on /reset-password.
+    resetPassword: (email) =>
+      supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      }),
+    // Sets a new password for the current (recovery or signed-in) session.
+    updatePassword: (password) => supabase.auth.updateUser({ password }),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

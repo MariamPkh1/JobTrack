@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
-import { STATUSES, STATUS_BADGE, STATUS_DOT } from '../lib/statusConfig';
+import { STATUSES, STATUS_BADGE, STATUS_DOT, PRIORITY_BADGE } from '../lib/statusConfig';
 import InterviewModal from '../components/InterviewModal';
 
 const fmtDate = (d, opts) => (d ? new Date(d).toLocaleDateString(undefined, opts) : '—');
@@ -162,6 +162,33 @@ export default function ApplicationDetail() {
                   />
                   {app.status}
                 </span>
+              </Detail>
+              <Detail label="Priority">
+                {app.priority ? (
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-label-sm font-semibold ${PRIORITY_BADGE[app.priority]}`}
+                  >
+                    {app.priority}
+                  </span>
+                ) : (
+                  '—'
+                )}
+              </Detail>
+              <Detail label="Tags">
+                {app.tags?.length > 0 ? (
+                  <span className="flex flex-wrap gap-1.5">
+                    {app.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded-full bg-primary/10 px-2.5 py-1 text-label-sm font-medium text-primary"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </span>
+                ) : (
+                  '—'
+                )}
               </Detail>
             </div>
           </Card>

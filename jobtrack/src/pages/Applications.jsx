@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { STATUSES, STATUS_BADGE } from '../lib/statusConfig';
+import { STATUSES, STATUS_BADGE, PRIORITIES, PRIORITY_BADGE } from '../lib/statusConfig';
 
 const PAGE_SIZE = 8;
 
@@ -23,6 +23,7 @@ export default function Applications() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
+  const [priorityFilter, setPriorityFilter] = useState('All');
   const [sort, setSort] = useState('recent');
   const [page, setPage] = useState(1);
   const [deletingId, setDeletingId] = useState(null);
@@ -34,7 +35,7 @@ export default function Applications() {
       const [appsRes, intRes] = await Promise.all([
         supabase
           .from('applications')
-          .select('id, company_name, position, status, applied_date, location, job_url, resume_id')
+          .select('id, company_name, position, status, priority, tags, applied_date, location, job_url, resume_id')
           .order('applied_date', { ascending: false }),
         supabase
           .from('interviews')
@@ -64,8 +65,11 @@ export default function Applications() {
       const matchesQ =
         !q ||
         a.company_name.toLowerCase().includes(q) ||
-        a.position.toLowerCase().includes(q);
-      return matchesQ && (filter === 'All' || a.status === filter);
+        a.position.toLowerCase().includes(q) ||
+        (a.tags || []).some((t) => t.toLowerCase().includes(q));
+      const matchesStatus = filter === 'All' || a.status === filter;
+      const matchesPriority = priorityFilter === 'All' || a.priority === priorityFilter;
+      return matchesQ && matchesStatus && matchesPriority;
     });
     list = [...list].sort((a, b) => {
       if (sort === 'company') return a.company_name.localeCompare(b.company_name);
@@ -74,7 +78,7 @@ export default function Applications() {
       return sort === 'oldest' ? da - db : db - da;
     });
     return list;
-  }, [apps, query, filter, sort]);
+  }, [apps, query, filter, priorityFilter, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -138,6 +142,15 @@ export default function Applications() {
           options={['All', ...STATUSES]}
         />
         <Select
+          value={priorityFilter}
+          onChange={(v) => {
+            setPriorityFilter(v);
+            setPage(1);
+          }}
+          label="Priority"
+          options={['All', ...PRIORITIES]}
+        />
+        <Select
           value={sort}
           onChange={(v) => {
             setSort(v);
@@ -176,14 +189,16 @@ export default function Applications() {
         />
       ) : (
         <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left">
             <thead>
               <tr className="bg-surface-container-low text-label-sm uppercase tracking-wider text-on-surface-variant">
                 <th className="px-6 py-3 font-semibold">Company</th>
                 <th className="px-6 py-3 font-semibold">Position</th>
                 <th className="px-6 py-3 font-semibold">Status</th>
-                <th className="px-6 py-3 font-semibold">Applied Date</th>
-                <th className="px-6 py-3 font-semibold">Resume</th>
+                <th className="hidden px-6 py-3 font-semibold md:table-cell">Priority</th>
+                <th className="hidden px-6 py-3 font-semibold sm:table-cell">Applied Date</th>
+                <th className="hidden px-6 py-3 font-semibold lg:table-cell">Resume</th>
                 <th className="px-6 py-3 text-right font-semibold">Actions</th>
               </tr>
             </thead>
@@ -206,7 +221,24 @@ export default function Applications() {
                     </div>
                   </td>
                   <td className="px-6 py-3 text-body-md text-on-surface-variant">
-                    {app.position}
+                    <span className="block">{app.position}</span>
+                    {app.tags?.length > 0 && (
+                      <span className="mt-1 flex flex-wrap gap-1">
+                        {app.tags.slice(0, 3).map((t) => (
+                          <span
+                            key={t}
+                            className="rounded-full bg-surface-container-high px-2 py-0.5 text-label-sm font-medium text-on-surface-variant"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                        {app.tags.length > 3 && (
+                          <span className="text-label-sm text-on-surface-variant">
+                            +{app.tags.length - 3}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-3">
                     <span
@@ -215,7 +247,18 @@ export default function Applications() {
                       {app.status}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-body-md text-on-surface-variant">
+                  <td className="hidden px-6 py-3 md:table-cell">
+                    {app.priority ? (
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-label-sm font-semibold ${PRIORITY_BADGE[app.priority]}`}
+                      >
+                        {app.priority}
+                      </span>
+                    ) : (
+                      <span className="text-on-surface-variant">—</span>
+                    )}
+                  </td>
+                  <td className="hidden px-6 py-3 text-body-md text-on-surface-variant sm:table-cell">
                     {app.applied_date
                       ? new Date(app.applied_date).toLocaleDateString(undefined, {
                           month: 'short',
@@ -224,7 +267,7 @@ export default function Applications() {
                         })
                       : '—'}
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="hidden px-6 py-3 lg:table-cell">
                     {app.resume_id ? (
                       <span className="material-symbols-outlined text-[20px] text-primary">
                         description
@@ -260,6 +303,7 @@ export default function Applications() {
               ))}
             </tbody>
           </table>
+          </div>
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant px-6 py-3">
@@ -303,22 +347,8 @@ export default function Applications() {
         </div>
       )}
 
-      {/* Bottom feature cards */}
-      <div className="mt-stack-md grid grid-cols-1 gap-gutter lg:grid-cols-2">
-        <div
-          className="relative overflow-hidden rounded-xl p-6 text-on-primary shadow-lg"
-          style={{ background: 'linear-gradient(135deg, #0058be 0%, #2170e4 100%)' }}
-        >
-          <h4 className="text-headline-sm">Get More Interviews</h4>
-          <p className="mt-2 max-w-sm text-body-md opacity-90">
-            Our AI resume analyzer can help you optimize your application for
-            applicant tracking systems.
-          </p>
-          <button className="mt-5 rounded-lg bg-surface-container-lowest px-4 py-2 text-label-md font-semibold text-primary transition-transform hover:scale-[1.02] active:scale-95">
-            Try AI Optimizer
-          </button>
-        </div>
-
+      {/* Upcoming events */}
+      <div className="mt-stack-md">
         <div className="rounded-xl border border-outline-variant bg-surface-container-high p-6 shadow-sm">
           <h4 className="text-headline-sm text-on-surface">Upcoming Events</h4>
           {nextEvent ? (

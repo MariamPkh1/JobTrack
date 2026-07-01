@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabase';
 
 const NAV = [
@@ -12,8 +13,10 @@ const NAV = [
 
 export default function AppLayout() {
   const { user, signOut } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Pull the app-level profile row (name/avatar) created by the signup trigger.
   useEffect(() => {
@@ -40,6 +43,7 @@ export default function AppLayout() {
 
   const displayName =
     profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'there';
+  const email = profile?.email || user?.email || '';
   const initials = displayName
     .split(' ')
     .map((p) => p[0])
@@ -49,16 +53,40 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile backdrop */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-on-surface/40 backdrop-blur-sm lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="fixed left-0 top-0 z-50 flex h-full w-sidebar-width flex-col border-r border-outline-variant bg-surface-container py-6">
-        <div className="mb-8 px-6">
-          <h1 className="text-headline-md font-bold text-primary">JobTrack</h1>
-          <p className="text-label-sm text-on-surface-variant">Career Manager</p>
+      <aside
+        className={`fixed left-0 top-0 z-[60] flex h-full w-sidebar-width flex-col border-r border-outline-variant bg-surface-container py-6 transition-transform duration-300 lg:translate-x-0 ${
+          menuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="mb-8 flex items-start justify-between px-6">
+          <div>
+            <h1 className="text-headline-md font-bold text-primary">JobTrack</h1>
+            <p className="text-label-sm text-on-surface-variant">Career Manager</p>
+          </div>
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="rounded-lg p-1 text-on-surface-variant hover:bg-surface-container-high lg:hidden"
+            aria-label="Close menu"
+          >
+            <span className="material-symbols-outlined text-[22px]">close</span>
+          </button>
         </div>
 
         <div className="mb-6 px-4">
           <button
-            onClick={() => navigate('/applications/new')}
+            onClick={() => {
+              setMenuOpen(false);
+              navigate('/applications/new');
+            }}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-label-md font-semibold text-on-primary shadow-sm transition-all hover:opacity-90 active:scale-95"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
@@ -71,6 +99,7 @@ export default function AppLayout() {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => setMenuOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 transition-all duration-200 ${
                   isActive
@@ -99,38 +128,48 @@ export default function AppLayout() {
       </aside>
 
       {/* ── Main column ── */}
-      <div className="ml-sidebar-width min-h-screen">
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-surface px-stack-lg">
-          <div className="relative w-full max-w-md">
+      <div className="min-h-screen lg:ml-sidebar-width">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-3 border-b border-outline-variant bg-surface px-4 sm:px-stack-lg">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="shrink-0 rounded-lg p-1 text-on-surface-variant transition-colors hover:text-primary lg:hidden"
+            aria-label="Open menu"
+          >
+            <span className="material-symbols-outlined text-[26px]">menu</span>
+          </button>
+
+          <div className="relative min-w-0 flex-1 sm:max-w-md">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
               search
             </span>
             <input
               type="text"
               placeholder="Search applications..."
-              className="w-full rounded-full border-none bg-surface-container-low py-2 pl-10 pr-4 text-body-md transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-full border-none bg-surface-container-low py-2 pl-10 pr-4 text-body-md text-on-surface transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4 text-on-surface-variant">
-              <button className="transition-colors hover:text-primary">
-                <span className="material-symbols-outlined">notifications</span>
-              </button>
-              <button className="transition-colors hover:text-primary">
-                <span className="material-symbols-outlined">help_outline</span>
-              </button>
-            </div>
+          <div className="flex items-center gap-3 sm:gap-6">
+            <button
+              onClick={toggleTheme}
+              className="text-on-surface-variant transition-colors hover:text-primary"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={isDark ? 'Light mode' : 'Dark mode'}
+            >
+              <span className="material-symbols-outlined">
+                {isDark ? 'light_mode' : 'dark_mode'}
+              </span>
+            </button>
             <div className="flex items-center gap-3">
               <div className="hidden text-right sm:block">
                 <p className="text-label-md font-bold leading-tight text-on-surface">
                   {displayName}
                 </p>
-                <p className="text-label-sm leading-tight text-on-surface-variant">
-                  Premium Member
+                <p className="max-w-[180px] truncate text-label-sm leading-tight text-on-surface-variant">
+                  {email}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/10 bg-primary text-label-md font-bold text-on-primary">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-primary/10 bg-primary text-label-md font-bold text-on-primary">
                 {initials}
               </div>
             </div>

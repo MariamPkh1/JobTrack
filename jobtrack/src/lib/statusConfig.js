@@ -20,3 +20,20 @@ export const STATUS_DOT = {
   Rejected: '#ba1a1a',
   Withdrawn: '#727785',
 };
+
+// Priority ordering (highest urgency first) — matches the DB CHECK constraint
+// on applications.priority. Keep in sync with the backend.
+export const PRIORITIES = ['High', 'Medium', 'Low'];
+
+// Low-saturation chip styles for priority pills.
+export const PRIORITY_BADGE = {
+  High: 'bg-error/10 text-error',
+  Medium: 'bg-tertiary/10 text-tertiary',
+  Low: 'bg-surface-container-high text-on-surface-variant',
+};
+
+export const PRIORITY_DOT = {
+  High: '#ba1a1a',
+  Medium: '#924700',
+  Low: '#727785',
+};

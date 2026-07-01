@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Enable class-based dark mode: `dark:` utilities apply under a `.dark` root. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   @font-face {
     font-family: 'Inter';
@@ -118,6 +121,67 @@
   --text-label-sm--font-weight: 600;
 }
 
+/* ── Dark theme ──────────────────────────────────────────────────────
+   Overrides the design tokens under `.dark`. Every Tailwind color utility
+   resolves to var(--color-…), so flipping these variables re-themes the whole
+   app without touching component markup. */
+.dark {
+  /* Surfaces — the app treats `container-lowest` as the elevated card, so in
+     dark mode the ramp climbs *lighter* than the background (higher elevation
+     = lighter), giving cards real separation instead of muddy holes. */
+  --color-surface: #0f1115;
+  --color-surface-dim: #0d0f12;
+  --color-surface-bright: #35383d;
+  --color-surface-container-lowest: #16181d;
+  --color-surface-container-low: #1b1e23;
+  --color-surface-container: #1f2229;
+  --color-surface-container-high: #262a31;
+  --color-surface-container-highest: #2d3139;
+  --color-surface-variant: #42464e;
+  --color-on-surface: #e3e2e9;
+  --color-on-surface-variant: #b6bac6;
+  --color-inverse-surface: #e3e2e9;
+  --color-inverse-on-surface: #2e3036;
+
+  /* Outline — visible enough to read card edges on the dark background. */
+  --color-outline: #8d9199;
+  --color-outline-variant: #383c44;
+
+  /* Primary */
+  --color-primary: #adc6ff;
+  --color-on-primary: #002e69;
+  --color-primary-container: #004494;
+  --color-on-primary-container: #d8e2ff;
+
+  /* Secondary (green) */
+  --color-secondary: #50dea3;
+  --color-on-secondary: #003824;
+  --color-secondary-container: #005236;
+  --color-on-secondary-container: #6ffbbe;
+
+  /* Tertiary (amber) */
+  --color-tertiary: #ffb786;
+  --color-on-tertiary: #522300;
+  --color-tertiary-container: #723600;
+  --color-on-tertiary-container: #ffdcc6;
+
+  /* Error */
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  /* Background */
+  --color-background: #0f1115;
+  --color-on-background: #e3e2e9;
+}
+
+/* Glass tiles need a dark translucent base in dark mode. */
+.dark .glass-card {
+  background: rgba(31, 34, 41, 0.7);
+  border-color: var(--color-outline-variant);
+}
+
 @layer base {
   /* Global density knob. Shrinking the root font-size scales every rem-based
      size (all Tailwind utilities + our design tokens) to ~80% — the "75% zoom"
@@ -139,18 +203,20 @@
   }
 }
 
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
+@layer base {
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+  }
 }
 
 /* Glassmorphism card used on dashboard task tiles */

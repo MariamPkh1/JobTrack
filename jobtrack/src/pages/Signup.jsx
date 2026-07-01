@@ -86,10 +86,10 @@ export default function Signup() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant hover:text-primary"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:text-primary"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                <span className="material-symbols-outlined text-[20px]">
+                <span className="material-symbols-outlined text-[20px] leading-none [font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
                   {showPassword ? 'visibility_off' : 'visibility'}
                 </span>
               </button>
@@ -124,7 +124,7 @@ export default function Signup() {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-label-md font-semibold text-on-primary shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
             {isSubmitting && (
-              <span className="material-symbols-outlined animate-spin text-[20px]">
+              <span className="material-symbols-outlined animate-spin text-[20px] leading-none [font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
                 progress_activity
               </span>
             )}

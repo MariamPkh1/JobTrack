@@ -16,15 +16,15 @@ const FormField = forwardRef(function FormField(
       </label>
       <div className="relative">
         {icon && (
-          <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant">
+          <span className="material-symbols-outlined pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[19px] leading-none text-outline [font-variation-settings:'FILL'_0,'wght'_300,'GRAD'_0,'opsz'_20]">
             {icon}
           </span>
         )}
         <input
           ref={ref}
           id={id}
-          className={`w-full rounded-xl border bg-surface-container-lowest py-2.5 text-body-md text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:outline-none focus:ring-4 ${
-            icon ? 'pl-10' : 'pl-4'
+          className={`w-full rounded-xl border bg-surface-container-lowest py-3 text-body-md text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:outline-none focus:ring-4 ${
+            icon ? 'pl-11' : 'pl-4'
           } ${trailing ? 'pr-11' : 'pr-4'} ${
             error
               ? 'border-error focus:border-error focus:ring-error/15'

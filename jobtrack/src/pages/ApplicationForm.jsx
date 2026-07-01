@@ -4,7 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { STATUSES } from '../lib/statusConfig';
+import { STATUSES, PRIORITIES } from '../lib/statusConfig';
 import ResumeSelect from '../components/ResumeSelect';
 
 const inputClass =
@@ -30,6 +30,61 @@ function Card({ children, className = '' }) {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** Chip-style tag editor. Commits a tag on Enter or comma; backspace on an
+ *  empty field removes the last chip. Stores a string[] via `onChange`. */
+function TagsInput({ value = [], onChange }) {
+  const [draft, setDraft] = useState('');
+
+  const addTag = (raw) => {
+    const tag = raw.trim().replace(/,+$/, '');
+    if (!tag) return;
+    if (!value.some((t) => t.toLowerCase() === tag.toLowerCase())) {
+      onChange([...value, tag]);
+    }
+    setDraft('');
+  };
+
+  const removeTag = (idx) => onChange(value.filter((_, i) => i !== idx));
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(draft);
+    } else if (e.key === 'Backspace' && !draft && value.length) {
+      removeTag(value.length - 1);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 shadow-sm transition-all focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+      {value.map((tag, idx) => (
+        <span
+          key={`${tag}-${idx}`}
+          className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-label-sm font-medium text-primary"
+        >
+          {tag}
+          <button
+            type="button"
+            onClick={() => removeTag(idx)}
+            className="flex items-center text-primary/70 hover:text-primary"
+            aria-label={`Remove ${tag}`}
+          >
+            <span className="material-symbols-outlined text-[16px] leading-none">close</span>
+          </button>
+        </span>
+      ))}
+      <input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={onKeyDown}
+        onBlur={() => addTag(draft)}
+        placeholder={value.length ? 'Add another…' : 'e.g. Remote, Referral, Dream Job'}
+        className="min-w-[8rem] flex-1 bg-transparent py-1 text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none"
+      />
+    </div>
+  );
+}
+
 export default function ApplicationForm() {
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -52,6 +107,8 @@ export default function ApplicationForm() {
       salary_range: '',
       notes: '',
       status: 'Applied',
+      priority: 'Medium',
+      tags: [],
       applied_date: today(),
       resume_id: null,
     },
@@ -81,6 +138,8 @@ export default function ApplicationForm() {
           salary_range: data.salary_range ?? '',
           notes: data.notes ?? '',
           status: data.status ?? 'Applied',
+          priority: data.priority ?? 'Medium',
+          tags: data.tags ?? [],
           applied_date: data.applied_date ?? today(),
           resume_id: data.resume_id ?? null,
         });
@@ -100,6 +159,7 @@ export default function ApplicationForm() {
       salary_range: values.salary_range || null,
       notes: values.notes || null,
       resume_id: values.resume_id || null,
+      tags: values.tags ?? [],
     };
 
     if (isEdit) {
@@ -132,11 +192,11 @@ export default function ApplicationForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="mx-auto max-w-5xl px-container-padding py-10"
+      className="mx-auto max-w-5xl px-4 py-8 sm:px-container-padding sm:py-10"
       style={{ zoom: 1 }}
     >
       {/* Header */}
-      <div className="mb-10 flex items-center justify-between gap-4">
+      <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-display-lg text-on-surface">
             {isEdit ? 'Edit Application' : 'New Application'}
@@ -247,6 +307,17 @@ export default function ApplicationForm() {
                   />
                 </div>
               </div>
+
+              <div className="md:col-span-2">
+                <Label>Tags</Label>
+                <Controller
+                  control={control}
+                  name="tags"
+                  render={({ field }) => (
+                    <TagsInput value={field.value} onChange={field.onChange} />
+                  )}
+                />
+              </div>
             </div>
           </Card>
 
@@ -273,6 +344,19 @@ export default function ApplicationForm() {
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Priority</Label>
+              <select
+                className={`${inputClass} appearance-none`}
+                {...register('priority')}
+              >
+                {PRIORITIES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
                   </option>
                 ))}
               </select>

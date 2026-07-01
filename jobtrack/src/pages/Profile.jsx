@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Bar,
@@ -15,7 +16,8 @@ import { uploadResume, resumeSignedUrl, deleteResume } from '../lib/resumes';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [resumes, setResumes] = useState([]);
   const [apps, setApps] = useState([]);
@@ -23,6 +25,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -100,6 +103,19 @@ export default function Profile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    // Storage objects don't cascade with the auth user — clear the user's
+    // resume files first (best effort), then delete the account via RPC.
+    const paths = resumes.map((r) => r.file_url).filter(Boolean);
+    if (paths.length) {
+      await supabase.storage.from('resumes').remove(paths);
+    }
+    const { error } = await supabase.rpc('delete_user');
+    if (error) throw error;
+    await signOut();
+    navigate('/login', { replace: true });
+  };
+
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -126,14 +142,6 @@ export default function Profile() {
               <span className="material-symbols-outlined text-[18px]">mail</span>
               {profile?.email || user?.email}
             </p>
-            <div className="mt-2 flex gap-2">
-              <span className="rounded-full bg-primary-fixed px-3 py-1 text-label-sm font-semibold text-on-primary-fixed">
-                Premium Account
-              </span>
-              <span className="rounded-full bg-secondary-container px-3 py-1 text-label-sm font-semibold text-on-secondary-container">
-                Job Hunter
-              </span>
-            </div>
           </div>
         </div>
         <button
@@ -265,13 +273,40 @@ export default function Profile() {
           <ul className="space-y-4">
             <Step done={resumes.length > 0} label="Upload Resume" />
             <Step done={Boolean(profile?.name)} label="Add your name" />
-            <Step done={false} label="Verify Phone" />
+            <Step done={apps.length > 0} label="Add your first application" />
           </ul>
           <button
             onClick={() => fileRef.current?.click()}
             className="mt-8 rounded-lg bg-on-primary py-3 text-label-md font-semibold text-primary transition-colors hover:bg-primary-fixed"
           >
             Finish Setup
+          </button>
+        </div>
+      </section>
+
+      {/* Danger zone */}
+      <section className="mt-12 rounded-xl border border-error/40 bg-error-container/30 p-8">
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h4 className="flex items-center gap-2 text-headline-sm text-error">
+              <span className="material-symbols-outlined text-[22px] leading-none [font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_24]">
+                warning
+              </span>
+              Delete account
+            </h4>
+            <p className="mt-1 max-w-xl text-body-md text-on-surface-variant">
+              Permanently delete your account, resumes, applications, and interviews.
+              This action cannot be undone.
+            </p>
+          </div>
+          <button
+            onClick={() => setDeleting(true)}
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-error bg-surface-container-lowest px-6 py-2.5 text-label-md font-semibold text-error transition-all hover:bg-error hover:text-on-error active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px] leading-none [font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
+              delete_forever
+            </span>
+            Delete Account
           </button>
         </div>
       </section>
@@ -283,6 +318,14 @@ export default function Profile() {
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
+
+      {deleting && (
+        <DeleteAccountModal
+          email={profile?.email || user?.email}
+          onClose={() => setDeleting(false)}
+          onConfirm={handleDeleteAccount}
+        />
+      )}
 
       {editing && (
         <EditProfileModal
@@ -335,6 +378,86 @@ function Step({ done, label }) {
       </span>
       <span className={`text-label-md ${done ? '' : 'opacity-80'}`}>{label}</span>
     </li>
+  );
+}
+
+function DeleteAccountModal({ email, onClose, onConfirm }) {
+  const [confirmText, setConfirmText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const canDelete = confirmText.trim().toUpperCase() === 'DELETE';
+
+  const handleConfirm = async () => {
+    if (!canDelete || busy) return;
+    setBusy(true);
+    try {
+      await onConfirm();
+      // On success we redirect away, so no need to reset state.
+    } catch (err) {
+      toast.error(err.message || 'Could not delete account');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-on-surface/30 p-4 backdrop-blur-sm"
+      onClick={busy ? undefined : onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-error-container">
+            <span className="material-symbols-outlined text-[24px] leading-none text-error [font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_24]">
+              warning
+            </span>
+          </div>
+          <div>
+            <h3 className="text-headline-sm text-on-surface">Delete account</h3>
+            <p className="mt-1 text-body-md text-on-surface-variant">
+              This permanently deletes <span className="font-medium text-on-surface">{email}</span>{' '}
+              and all associated data. This cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <label className="mb-1.5 block text-label-md font-medium text-on-surface-variant">
+          Type <span className="font-semibold text-error">DELETE</span> to confirm
+        </label>
+        <input
+          autoFocus
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="DELETE"
+          className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 text-body-md shadow-sm focus:border-error focus:outline-none focus:ring-[3px] focus:ring-error/15"
+        />
+
+        <div className="mt-5 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-lg border border-outline-variant px-4 py-2 text-label-md font-medium text-on-surface-variant hover:bg-surface-container-low disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!canDelete || busy}
+            className="flex items-center gap-2 rounded-lg bg-error px-4 py-2 text-label-md font-semibold text-on-error shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+          >
+            {busy && (
+              <span className="material-symbols-outlined animate-spin text-[18px] leading-none [font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
+                progress_activity
+              </span>
+            )}
+            Delete forever
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

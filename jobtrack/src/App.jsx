@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Applications from './pages/Applications';
 import ApplicationForm from './pages/ApplicationForm';
@@ -36,6 +38,17 @@ function App() {
           </PublicOnly>
         }
       />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicOnly>
+            <ForgotPassword />
+          </PublicOnly>
+        }
+      />
+      {/* Standalone: reached via the emailed recovery link, which itself
+          creates a (recovery) session, so it must not be behind PublicOnly. */}
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route
         element={

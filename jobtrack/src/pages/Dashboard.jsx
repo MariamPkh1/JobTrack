@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const STATUS_META = [
   { key: 'Applied', color: '#0058be', label: 'Applied' },
@@ -42,7 +43,16 @@ function StatCard({ icon, iconClass, label, value, delta, deltaClass }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const { displayName } = useOutletContext();
+  const axisTick = isDark ? '#c4c6d0' : '#424754';
+  const tooltipStyle = {
+    borderRadius: 10,
+    border: `1px solid ${isDark ? '#43474e' : '#c2c6d6'}`,
+    background: isDark ? '#1d2024' : '#ffffff',
+    color: isDark ? '#e2e2e9' : '#151c27',
+    fontSize: 12,
+  };
   const [apps, setApps] = useState([]);
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,13 +145,19 @@ export default function Dashboard() {
       {/* Greeting */}
       <div className="mb-stack-lg">
         <h2 className="text-display-lg text-on-surface">
-          Welcome back, {displayName.split(' ')[0]}
+          Welcome{stats.total > 0 ? ' back' : ''}, {displayName.split(' ')[0]}
         </h2>
         <p className="text-body-lg text-on-surface-variant">
-          Here's what's happening with your job search today.
+          {stats.total > 0
+            ? "Here's what's happening with your job search today."
+            : "Let's get your job search organized."}
         </p>
       </div>
 
+      {stats.total === 0 ? (
+        <Onboarding />
+      ) : (
+      <>
       {/* Stat cards */}
       <div className="mb-stack-lg grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -205,21 +221,17 @@ export default function Dashboard() {
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#424754', fontSize: 12 }}
+                  tick={{ fill: axisTick, fontSize: 12 }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#424754', fontSize: 12 }}
+                  tick={{ fill: axisTick, fontSize: 12 }}
                   allowDecimals={false}
                 />
                 <Tooltip
                   cursor={{ fill: 'rgba(0,88,190,0.06)' }}
-                  contentStyle={{
-                    borderRadius: 10,
-                    border: '1px solid #c2c6d6',
-                    fontSize: 12,
-                  }}
+                  contentStyle={tooltipStyle}
                 />
                 <Bar dataKey="count" fill="#0058be" radius={[8, 8, 0, 0]} maxBarSize={48} />
               </BarChart>
@@ -250,13 +262,7 @@ export default function Dashboard() {
                       <Cell key={d.name} fill={d.color} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 10,
-                      border: '1px solid #c2c6d6',
-                      fontSize: 12,
-                    }}
-                  />
+                  <Tooltip contentStyle={tooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -338,6 +344,71 @@ export default function Dashboard() {
             </p>
           </div>
         )}
+      </div>
+      </>
+      )}
+    </div>
+  );
+}
+
+function Onboarding() {
+  const steps = [
+    {
+      icon: 'work',
+      title: 'Add applications',
+      body: 'Log a company, role, and status to start tracking your pipeline.',
+    },
+    {
+      icon: 'description',
+      title: 'Upload a resume',
+      body: 'Attach resume versions and link the right one to each application.',
+    },
+    {
+      icon: 'event',
+      title: 'Track interviews',
+      body: 'Add interview stages and keep every follow-up in one place.',
+    },
+  ];
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      {/* Primary empty state */}
+      <div className="flex flex-col items-center rounded-xl border border-outline-variant bg-surface-container-lowest px-6 py-12 text-center shadow-sm">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="material-symbols-outlined text-[34px]">rocket_launch</span>
+        </div>
+        <h3 className="mt-5 text-headline-sm text-on-surface">
+          Let's add your first application
+        </h3>
+        <p className="mt-2 max-w-md text-body-md text-on-surface-variant">
+          It only takes a few seconds. Your dashboard fills up with stats, charts,
+          and upcoming interviews as you go.
+        </p>
+        <Link
+          to="/applications/new"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-label-md font-semibold text-on-primary shadow-sm transition-all hover:opacity-90 active:scale-95"
+        >
+          <span className="material-symbols-outlined text-[20px]">add</span>
+          Add your first application
+        </Link>
+      </div>
+
+      {/* Steps */}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {steps.map((s, i) => (
+          <div
+            key={s.title}
+            className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span className="material-symbols-outlined text-[22px]">{s.icon}</span>
+            </div>
+            <p className="mt-3 text-label-md font-semibold text-on-surface">
+              {i + 1}. {s.title}
+            </p>
+            <p className="mt-1 text-body-md text-on-surface-variant">{s.body}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
