@@ -168,9 +168,7 @@ export default function Applications() {
       {/* Table */}
       {loading ? (
         <div className="flex h-[40vh] items-center justify-center">
-          <span className="material-symbols-outlined animate-spin text-4xl text-primary">
-            progress_activity
-          </span>
+          <span className="app-spinner" role="status" aria-label="Loading" />
         </div>
       ) : apps.length === 0 ? (
         <EmptyState

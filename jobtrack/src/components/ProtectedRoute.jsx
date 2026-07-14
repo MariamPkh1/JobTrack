@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import LoadingScreen from './LoadingScreen';
 
 /** Gate for authenticated routes. Redirects to /login when there's no session. */
 export default function ProtectedRoute({ children }) {
@@ -7,13 +8,7 @@ export default function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <span className="material-symbols-outlined animate-spin text-primary text-4xl">
-          progress_activity
-        </span>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!session) {

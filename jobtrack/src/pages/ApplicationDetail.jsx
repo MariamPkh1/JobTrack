@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { STATUSES, STATUS_BADGE, STATUS_DOT, PRIORITY_BADGE } from '../lib/statusConfig';
 import InterviewModal from '../components/InterviewModal';
+import LoadingScreen from '../components/LoadingScreen';
 
 const fmtDate = (d, opts) => (d ? new Date(d).toLocaleDateString(undefined, opts) : '—');
 
@@ -80,13 +81,7 @@ export default function ApplicationDetail() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-4xl text-primary">
-          progress_activity
-        </span>
-      </div>
-    );
+    return <LoadingScreen inline />;
   }
 
   return (
@@ -191,6 +186,28 @@ export default function ApplicationDetail() {
                 )}
               </Detail>
             </div>
+          </Card>
+
+          {/* Job description */}
+          <Card>
+            <div className="flex items-center justify-between">
+              <CardTitle icon="description">Job Description</CardTitle>
+              <Link
+                to={`/applications/${id}/edit`}
+                className="text-label-md font-medium text-primary hover:underline"
+              >
+                Edit
+              </Link>
+            </div>
+            {app.job_description ? (
+              <p className="whitespace-pre-wrap rounded-lg bg-surface-container-low p-4 text-body-md leading-relaxed text-on-surface-variant">
+                {app.job_description}
+              </p>
+            ) : (
+              <p className="text-body-md text-on-surface-variant">
+                No job description added yet.
+              </p>
+            )}
           </Card>
 
           {/* Notes */}

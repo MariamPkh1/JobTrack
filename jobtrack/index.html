@@ -23,9 +23,41 @@
         } catch (e) {}
       })();
     </script>
+    <style>
+      /* Initial loader — shown instantly (before the JS bundle, CSS, or icon
+         font load) and automatically replaced when React first renders. Pure
+         CSS so there's no blank flash and no font-ligature text flash. */
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9f9ff;
+      }
+      html.dark #initial-loader { background: #0f1115; }
+      #initial-loader .ring {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 3px solid #c2c6d6;
+        border-top-color: #0058be;
+        animation: il-spin 0.7s linear infinite;
+      }
+      html.dark #initial-loader .ring {
+        border-color: #383c44;
+        border-top-color: #adc6ff;
+      }
+      @keyframes il-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        #initial-loader .ring { animation-duration: 1.6s; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="initial-loader"><div class="ring"></div></div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

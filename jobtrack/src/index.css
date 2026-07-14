@@ -225,3 +225,24 @@
   backdrop-filter: blur(8px);
   border: 1px solid var(--color-outline-variant);
 }
+
+/* App loading spinner — a pure-CSS ring so it never depends on the Material
+   Symbols icon font. (The old material-symbols spinner rendered the literal
+   ligature text "progress_activity" until the font loaded — that was the flash
+   on first paint.) Matches the initial loader in index.html for a seamless
+   handoff. */
+.app-spinner {
+  display: inline-block;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: 3px solid var(--color-outline-variant);
+  border-top-color: var(--color-primary);
+  animation: app-spin 0.7s linear infinite;
+}
+@keyframes app-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-spinner { animation-duration: 1.6s; }
+}

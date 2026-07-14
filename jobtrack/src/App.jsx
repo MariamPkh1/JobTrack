@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
+import LoadingScreen from './components/LoadingScreen';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -15,7 +16,7 @@ import Profile from './pages/Profile';
 /** Redirect signed-in users away from the auth pages. */
 function PublicOnly({ children }) {
   const { session, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <LoadingScreen />;
   return session ? <Navigate to="/dashboard" replace /> : children;
 }
 

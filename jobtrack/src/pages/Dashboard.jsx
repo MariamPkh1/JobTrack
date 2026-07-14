@@ -14,6 +14,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import LoadingScreen from '../components/LoadingScreen';
 
 const STATUS_META = [
   { key: 'Applied', color: '#0058be', label: 'Applied' },
@@ -128,13 +129,7 @@ export default function Dashboard() {
   );
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-4xl text-primary">
-          progress_activity
-        </span>
-      </div>
-    );
+    return <LoadingScreen inline />;
   }
 
   return (

@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { STATUSES, PRIORITIES } from '../lib/statusConfig';
 import ResumeSelect from '../components/ResumeSelect';
+import LoadingScreen from '../components/LoadingScreen';
 
 const inputClass =
   'w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-body-md text-on-surface shadow-sm transition-all placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15';
@@ -105,6 +106,7 @@ export default function ApplicationForm() {
       job_url: '',
       location: '',
       salary_range: '',
+      job_description: '',
       notes: '',
       status: 'Applied',
       priority: 'Medium',
@@ -136,6 +138,7 @@ export default function ApplicationForm() {
           job_url: data.job_url ?? '',
           location: data.location ?? '',
           salary_range: data.salary_range ?? '',
+          job_description: data.job_description ?? '',
           notes: data.notes ?? '',
           status: data.status ?? 'Applied',
           priority: data.priority ?? 'Medium',
@@ -157,6 +160,7 @@ export default function ApplicationForm() {
       job_url: values.job_url || null,
       location: values.location || null,
       salary_range: values.salary_range || null,
+      job_description: values.job_description || null,
       notes: values.notes || null,
       resume_id: values.resume_id || null,
       tags: values.tags ?? [],
@@ -180,13 +184,7 @@ export default function ApplicationForm() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-4xl text-primary">
-          progress_activity
-        </span>
-      </div>
-    );
+    return <LoadingScreen inline />;
   }
 
   return (
@@ -319,6 +317,19 @@ export default function ApplicationForm() {
                 />
               </div>
             </div>
+          </Card>
+
+          <Card>
+            <Label>Job Description</Label>
+            <textarea
+              rows={8}
+              className={`${inputClass} resize-y`}
+              placeholder="Paste the full job description here. JobTrack uses it to map the skills this role needs to your career graph."
+              {...register('job_description')}
+            />
+            <p className="mt-2 text-label-sm text-on-surface-variant">
+              Paste the full posting — the more complete, the better the skill matching.
+            </p>
           </Card>
 
           <Card>
